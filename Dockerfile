@@ -13,14 +13,18 @@ ENV INSTALL_PLUGINS_SH ${BIN}/install-plugins.sh
 ENV PLUGINS_SH ${BIN}/plugins.sh
 ENV JENKINS_SH ${BIN}/jenkins.sh
 ENV COPY_REFERENCE_FILE_LOG $JENKINS_HOME/copy_reference_file.log
+ENV JENKINS_UC https://updates.jenkins.io
+ENV JENKINS_UC_EXPERIMENTAL=https://updates.jenkins.io/experimental
 
 RUN apt-get update \
-     && apt-get install -y git \
+     && apt-get install -y git curl \
      && apt-get upgrade -y \
      && rm -rf /var/lib/apt/lists/* \
      && groupadd -g ${gid} ${group} \
      && useradd -d "$JENKINS_HOME" -u ${uid} -g ${gid} -m -s /bin/bash ${user} \
-     && mkdir -p /usr/share/jenkins/ref/init.groovy.d
+     && mkdir -p /usr/share/jenkins/ref/init.groovy.d \
+     && chown -R ${uid}:${gid} /usr/share/jenkins \
+     && chmod ug+rw /usr/share/jenkins
 
 # Install scrips from Jenkins git repo
 ADD https://raw.githubusercontent.com/jenkinsci/docker/master/install-plugins.sh ${INSTALL_PLUGINS_SH}
