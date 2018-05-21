@@ -26,7 +26,7 @@ RUN apt-get update \
      && chown -R ${uid}:${gid} /usr/share/jenkins \
      && chmod ug+rw /usr/share/jenkins
 
-ENV JENKINS_VERSION 2.107.2
+ENV JENKINS_VERSION 2.107.3
 
 # Install scrips from Jenkins git repo
 ADD https://raw.githubusercontent.com/jenkinsci/docker/master/install-plugins.sh ${INSTALL_PLUGINS_SH}
