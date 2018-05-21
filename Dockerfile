@@ -1,20 +1,20 @@
 FROM arm32v7/openjdk:8-slim
 
-ENV user=jenkins
-ENV group=jenkins
-ENV uid=1000
-ENV gid=1000
-ENV BIN /usr/local/bin
-ENV JENKINS_VERSION 2.107.2
-ENV JENKINS_HOME /var/jenkins_home
-ENV JENKINS_WAR  /usr/share/jenkins/jenkins.war
-ENV JENKINS_SUPPORT ${BIN}/jenkins-support
-ENV INSTALL_PLUGINS_SH ${BIN}/install-plugins.sh
-ENV PLUGINS_SH ${BIN}/plugins.sh
-ENV JENKINS_SH ${BIN}/jenkins.sh
-ENV COPY_REFERENCE_FILE_LOG $JENKINS_HOME/copy_reference_file.log
-ENV JENKINS_UC https://updates.jenkins.io
-ENV JENKINS_UC_EXPERIMENTAL=https://updates.jenkins.io/experimental
+ENV user=jenkins \
+    group=jenkins \
+    uid=1000 \
+    gid=1000 \
+    BIN /usr/local/bin \
+    JENKINS_HOME /var/jenkins_home \
+    JENKINS_WAR  /usr/share/jenkins/jenkins.war \
+    JENKINS_SUPPORT ${BIN}/jenkins-support \
+    INSTALL_PLUGINS_SH ${BIN}/install-plugins.sh \
+    PLUGINS_SH ${BIN}/plugins.sh \
+    JENKINS_SH ${BIN}/jenkins.sh \
+    COPY_REFERENCE_FILE_LOG $JENKINS_HOME/copy_reference_file.log \
+    JENKINS_UC https://updates.jenkins.io \
+    JENKINS_UC_EXPERIMENTAL=https://updates.jenkins.io/experimental
+
 
 RUN apt-get update \
      && apt-get install -y git curl \
@@ -25,6 +25,8 @@ RUN apt-get update \
      && mkdir -p /usr/share/jenkins/ref/init.groovy.d \
      && chown -R ${uid}:${gid} /usr/share/jenkins \
      && chmod ug+rw /usr/share/jenkins
+
+ENV JENKINS_VERSION 2.107.2
 
 # Install scrips from Jenkins git repo
 ADD https://raw.githubusercontent.com/jenkinsci/docker/master/install-plugins.sh ${INSTALL_PLUGINS_SH}
