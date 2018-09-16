@@ -1,0 +1,42 @@
+base_images:
+- version: standart
+  name: "openjdk:8"
+  base: "debian"
+- version: slim
+  name: "openjdk:8-slim"
+  base: "debian"
+- version: alpine
+  name: "openjdk:8-alpine"
+  base: "alpine"
+
+user: "jenkins"
+group: "jenkins"
+uid: "1000"
+gid: "1000"
+BIN: "/usr/local/bin"
+JENKINS_HOME: "/var/jenkins_home"
+JENKINS_WAR: "/usr/share/jenkins/jenkins.war"
+JENKINS_SUPPORT: "{{BIN}}/jenkins-support"
+INSTALL_PLUGINS_SH: "{{BIN}}/install-plugins.sh"
+PLUGINS_SH: "{{BIN}}/plugins.sh"
+JENKINS_SH: "{{BIN}}/jenkins.sh"
+
+jenkins_versions:
+  - version: lts
+    url: http://mirrors.jenkins.io/war-stable/latest/jenkins.war
+  - version: weekly
+    url: http://mirrors.jenkins.io/war/latest/jenkins.war
+
+downloads:
+  - name: "install-plugins.sh"
+    url: "https://raw.githubusercontent.com/jenkinsci/docker/master/install-plugins.sh"
+  - name: "jenkins-support"
+    url: "https://raw.githubusercontent.com/jenkinsci/docker/master/jenkins-support"
+  - name: "plugins.sh"
+    url: "https://raw.githubusercontent.com/jenkinsci/docker/master/plugins.sh"
+  - name: "jenkins.sh"
+    url: "https://raw.githubusercontent.com/jenkinsci/docker/master/jenkins.sh"
+
+dockerhubrepo: "rpicluster"
+
+temp_folder: "~/tmp/jenkins"
