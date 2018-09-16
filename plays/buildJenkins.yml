@@ -1,0 +1,5 @@
+---
+- name: Build Jenkins docker images
+  hosts: master_deployment_server
+  roles:
+    - name: buildJenkins

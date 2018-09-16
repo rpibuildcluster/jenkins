@@ -1,0 +1,34 @@
+FROM {{item.name}}
+
+ENV COPY_REFERENCE_FILE_LOG={{JENKINS_HOME}}/copy_reference_file.log \
+    JENKINS_UC=https://updates.jenkins.io \
+    JENKINS_UC_EXPERIMENTAL=https://updates.jenkins.io/experimental \
+    JENKINS_HOME={{JENKINS_HOME}}
+
+# Jenkins home directory is a volume, so configuration and build history
+# can be persisted and survive image upgrades
+VOLUME ${JENKINS_HOME}
+
+{% if item.base == 'debian' %}
+RUN apt-get update \
+     && apt-get install -y apt-utils git curl \
+     && apt-get upgrade -y \
+     && rm -rf /var/lib/apt/lists/* \
+{% endif %}
+{% if item.base == 'alpine' %}
+RUN apk add --no-cache git curl \
+{% endif %}
+     && addgroup --system --gid {{gid}} {{group}} \
+     && adduser --system -h "{{JENKINS_HOME}}" --uid {{uid}} -G {{group}} --shell /bin/bash {{user}} \
+     && mkdir -p /usr/share/jenkins/ref/init.groovy.d \
+     && chown -R {{uid}}:{{gid}} /usr/share/jenkins \
+     && chmod ug+rw /usr/share/jenkins
+
+# Install scrips from Jenkins git repo
+COPY install-plugins.sh {{INSTALL_PLUGINS_SH}}
+COPY jenkins-support {{JENKINS_SUPPORT}}
+COPY plugins.sh {{PLUGINS_SH}}
+COPY jenkins.sh {{JENKINS_SH}}
+
+USER {{user}}
+CMD [ "/usr/local/bin/jenkins.sh" ]

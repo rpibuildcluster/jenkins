@@ -1,0 +1,112 @@
+---
+- name: Download jenkins checksum
+  get_url:
+    url: "{{item.url}}.sha256"
+    dest: "{{temp_folder}}/jenkins.{{item.version}}.war.sha256"
+  with_items:
+    - "{{jenkins_versions}}"
+
+#- name: sha256
+#  debug:
+#    msg: "lookup('csvfile', 'Li file={{temp_folder}}/jenkins.{{item.version}}.war.sha256 delimiter=' ' col=0')"
+#  with_items:
+#    - "{{jenkins_versions}}"
+
+- name: Download jenkins and verify checksum
+  get_url:
+    url: "{{item.url}}"
+    dest: "{{temp_folder}}/jenkins.{{item.version}}.war"
+#    checksum: "sha256:lookup('csvfile', 'Li file={{temp_folder}}/jenkins.{{item.version}}.war.sha256 delimiter=' ' col=0')"
+  with_items:
+    - "{{jenkins_versions}}"
+
+- name: Download the external files
+  get_url:
+    url: "{{item.url}}"
+    dest: "{{temp_folder}}/{{item.name}}"
+  with_items:
+    - "{{downloads}}"
+
+- name: Create the directories for the interim images
+  file:
+    path: "{{temp_folder}}/{{item.version}}_interim/"
+    state: directory
+  with_items:
+    - "{{base_images}}"
+
+- name: Create the Docker files for the interim images
+  template:
+    src: Dockerfile_interim
+    dest: "{{temp_folder}}/{{item.version}}_interim/Dockerfile"
+  with_items:
+    - "{{base_images}}"
+
+# Docker can't get files form outsite the context
+- name: Copy the external files to the context
+  copy:
+    src: "{{temp_folder}}/{{item[1].name}}"
+    dest: "{{temp_folder}}/{{item[0].version}}_interim/{{item[1].name}}"
+    remote_src: yes
+  with_nested:
+    - "{{base_images}}"
+    - "{{downloads}}"
+
+# We gonna use the same interim image for both lts and weekly
+- name: Build interim image
+  docker_image:
+     path: "{{temp_folder}}/{{item.version}}_interim/"
+     name: jenkins_interim
+     tag: "{{item.version}}"
+  with_items:
+    - "{{base_images}}"
+
+- name: Create the directories for the final images
+  file:
+    path: "{{temp_folder}}/{{item[0].version}}_{{item[1].version}}"
+    state: directory
+  with_nested:
+    - "{{base_images}}"
+    - "{{jenkins_versions}}"
+
+# Docker can't get files form outsite the context
+- name: Copy the jenkins war files to the context
+  copy:
+    src: "{{temp_folder}}/jenkins.{{item[1].version}}.war"
+    dest: "{{temp_folder}}/{{item[0].version}}_{{item[1].version}}/jenkins.{{item[1].version}}.war"
+    remote_src: yes
+  with_nested:
+    - "{{base_images}}"
+    - "{{jenkins_versions}}"
+
+- name: Create the Docker files for the final images
+  template:
+    src: Dockerfile_jenkins
+    dest: "{{temp_folder}}/{{item[0].version}}_{{item[1].version}}/Dockerfile"
+  with_nested:
+    - "{{base_images}}"
+    - "{{jenkins_versions}}"
+
+- name: Build final image
+  docker_image:
+     path: "{{temp_folder}}/{{item[0].version}}_{{item[1].version}}/"
+     name: "{{dockerhubrepo}}/jenkins"
+     tag: "{{item[0].version}}-{{item[1].version}}"
+     pull: false
+  with_nested:
+    - "{{base_images}}"
+    - "{{jenkins_versions}}"
+
+- name: Push images to repo
+  docker_image:
+     name: "{{dockerhubrepo}}/jenkins"
+     tag: "{{item[0].version}}-{{item[1].version}}"
+     pull: false
+     push: yes
+  with_nested:
+    - "{{base_images}}"
+    - "{{jenkins_versions}}"
+
+- name: Clean temp folders
+  file:
+    state: absent
+    path: "{{temp_folder}}/"
